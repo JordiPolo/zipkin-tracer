@@ -51,8 +51,8 @@ module ZipkinTracer
 
     def record(annotation)
       ::Trace.record(annotation)
-    rescue Exception # Sockets errors inherit from Exception, not from StandardError
-      #TODO: if this class some day accepts a config hash, add a logger
+ #   rescue Exception # Sockets errors inherit from Exception, not from StandardError
+#      #TODO: if this class some day accepts a config hash, add a logger
     end
 
     def callee_endpoint(url)

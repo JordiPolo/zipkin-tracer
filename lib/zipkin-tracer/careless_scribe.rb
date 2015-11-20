@@ -43,7 +43,7 @@ class AsyncScribe
     # it is difficult to ensure there will be no threading issues unless we create here the connection
     scribe = Scribe.new(server_address, CATEGORY, ADD_NEWLINES_TO_MESSAGES, timeout: PROTOCOL_TIMEOUT)
     scribe.log(*args)
-  rescue ThriftClient::NoServersAvailable, Thrift::Exception
+ # rescue ThriftClient::NoServersAvailable, Thrift::Exception
     # I couldn't care less
   end
 
@@ -63,7 +63,7 @@ class CarelessScribe
   def batch(&block)
     yield   #We just yield here
     # the block finagle-thrift-1.4.1/lib/finagle-thrift/tracer.rb flush! method will call log also.
-  rescue ThriftClient::NoServersAvailable, Thrift::Exception
+#  rescue ThriftClient::NoServersAvailable, Thrift::Exception
     # I couldn't care less
   end
 
