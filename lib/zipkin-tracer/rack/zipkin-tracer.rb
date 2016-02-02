@@ -35,9 +35,11 @@ module ZipkinTracer
       zipkin_env = ZipkinEnv.new(env, @config)
       trace_id = zipkin_env.trace_id
       with_trace_id(trace_id) do
+        @config.logger.info("Generated new trace_id #{trace_id}")
         if !trace_id.sampled? || !Application.routable_request?(env['PATH_INFO'])
           @app.call(env)
         else
+          @config.logger.info("Creating new span")
           @tracer.with_new_span(trace_id, zipkin_env.env['REQUEST_METHOD'].to_s.downcase) do |span|
             trace!(span, zipkin_env) { @app.call(env) }
           end
@@ -59,17 +61,20 @@ module ZipkinTracer
     end
 
     def trace!(span, zipkin_env, &block)
+      @config.logger.info("Tracing!")
       synchronize do
         #if called by a service, the caller already added the information
         trace_request_information(span, zipkin_env.env) unless zipkin_env.called_with_zipkin_headers?
         span.record(Trace::Annotation.new(Trace::Annotation::SERVER_RECV, Trace.default_endpoint))
         span.record(Trace::Annotation.new('whitelisted', Trace.default_endpoint)) if zipkin_env.force_sample?
       end
+      @config.logger.info("SR has been traced")
       status, headers, body = yield
     ensure
       synchronize do
         annotate_plugin(zipkin_env.env, status, headers, body)
         span.record(Trace::Annotation.new(Trace::Annotation::SERVER_SEND, Trace.default_endpoint))
+        @config.logger.info("SS has been traced")
       end
     end
 

@@ -12,6 +12,7 @@ module Trace
     def initialize(options={})
       @options = options
       @traces_buffer = options[:traces_buffer] || raise(ArgumentError, 'A proper buffer must be setup for the Zipkin tracer')
+      @logger = @options[:logger]
       reset
     end
 
@@ -23,8 +24,11 @@ module Trace
     end
 
     def may_flush(span)
+      @logger.info("MAY flush!")
       size = spans.values.map(&:size).inject(:+) || 0
+      @logger.info("Size #{size}")
       if size >= @traces_buffer || span.annotations.any?{ |ann| ann == Annotation::SERVER_SEND }
+        @logger.info("Flushing")
         flush!
         reset
       end
@@ -52,6 +56,7 @@ module Trace
     end
 
     def reset
+      @logger.info("Reset")
       Thread.current[:zipkin_spans] = {}
     end
   end
