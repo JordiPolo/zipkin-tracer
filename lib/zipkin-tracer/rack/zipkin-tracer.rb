@@ -28,13 +28,17 @@ module ZipkinTracer
       @app = app
       @config = Config.new(app, config).freeze
       @tracer = TracerFactory.new.tracer(@config)
+      Rails.logger.info("Zipkin Rack: starting")
     end
 
     def call(env)
+      Rails.logger.info("Zipkin Rack: calling")
       zipkin_env = ZipkinEnv.new(env, @config)
       trace_id = zipkin_env.trace_id
       Trace.with_trace_id(trace_id) do
+        Rails.logger.info("Zipkin Rack: trace id #{trace_id}")
         if !trace_id.sampled? || !Application.routable_request?(env['PATH_INFO'])
+          Rails.logger.info("Zipkin Rack: sampled")
           @app.call(env)
         else
           @tracer.with_new_span(trace_id, zipkin_env.env['REQUEST_METHOD'].to_s.downcase) do |span|

@@ -15,19 +15,24 @@ module ZipkinTracer
     }.freeze
 
     def initialize(app, service_name = nil)
+      Rails.logger.info("Zipkin Faraday initialized")
       @app = app
       @service_name = service_name
     end
 
     def call(env)
+      Rails.logger.info("Zipkin Faraday middleware start")
       trace_id = Trace.id.next_id
       Trace.with_trace_id(trace_id) do
+        Rails.logger.info("Zipkin Faraday: trace id #{trace_id} ")
         B3_HEADERS.each do |method, header|
           env[:request_headers][header] = trace_id.send(method).to_s
         end
         if trace_id.sampled?
+          Rails.logger.info("Zipkin Faraday: sampled ")
           trace!(env, trace_id)
         else
+          Rails.logger.info("Zipkin Faraday: not sampled ")
           @app.call(env)
         end
       end
@@ -42,14 +47,17 @@ module ZipkinTracer
       url = env[:url].respond_to?(:host) ? env[:url] : URI.parse(env[:url].to_s)
       local_endpoint = Trace.default_endpoint # The rack middleware set this up for us.
       remote_endpoint = Trace::Endpoint.remote_endpoint(url, @service_name, local_endpoint.ip_format) # The endpoint we are calling.
+      Rails.logger.info("Zipkin Faraday: local #{local_endpoint} , remote #{remote_endpoint}")
       Trace.tracer.with_new_span(trace_id, env[:method].to_s.downcase) do |span|
         # annotate with method (GET/POST/etc.) and uri path
         span.record_tag(Trace::BinaryAnnotation::URI, url.path, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
         span.record_tag(Trace::BinaryAnnotation::SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, Trace::BinaryAnnotation::Type::BOOL, remote_endpoint)
         span.record(Trace::Annotation::CLIENT_SEND, local_endpoint)
+        Rails.logger.info("Zipkin Faraday: About to call")
         response = @app.call(env).on_complete do |renv|
           # record HTTP status code on response
           span.record_tag(Trace::BinaryAnnotation::STATUS, renv[:status].to_s, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
+          Rails.logger.info("Zipkin Faraday: called, status #{renv[:status].to_s}")
         end
         span.record(Trace::Annotation::CLIENT_RECV, local_endpoint)
       end

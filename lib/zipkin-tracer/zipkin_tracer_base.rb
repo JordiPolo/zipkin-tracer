@@ -22,14 +22,17 @@ module Trace
     end
 
     def end_span(span)
+      Rails.logger.info("Zipkin: Ending span")
       span.close
       if span.annotations.any?{ |ann| ann.value == Annotation::SERVER_SEND }
+        Rails.logger.info("Flushing")
         flush!
         reset
       end
     end
 
     def start_span(trace_id, name)
+      Rails.logger.info("Zipkin: Starting span")
       span = Span.new(name, trace_id)
       store_span(trace_id, span)
       span
