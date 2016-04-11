@@ -25,13 +25,9 @@ module ZipkinTracer
       trace_id = Trace.id.next_id
       Trace.with_trace_id(trace_id) do
         Rails.logger.info(env)
-        Rails.logger.info("Zipkin Faraday headers #{env[:request_headers].to_hash}")
-        Rails.logger.info("Zipkin Faraday: trace id #{trace_id} ")
         B3_HEADERS.each do |method, header|
           env[:request_headers][header] = trace_id.send(method).to_s
         end
-        Rails.logger.info(env)
-        Rails.logger.info("Zipkin Faraday headers #{env[:request_headers].to_hash}")
         if trace_id.sampled?
           Rails.logger.info("Zipkin Faraday: sampled ")
           trace!(env, trace_id)
