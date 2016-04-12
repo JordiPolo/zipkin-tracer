@@ -6,17 +6,11 @@ require 'uri'
 module ZipkinTracer
   # Faraday middleware. It will add CR/CS annotations to outgoing connections done by Faraday
   class FaradayHandler < ::Faraday::Middleware
-=begin
+
     B3_HEADERS = {
       trace_id: 'X-B3-TraceId',
       parent_id: 'X-B3-ParentSpanId',
       span_id: 'X-B3-SpanId',
-      sampled: 'X-B3-Sampled',
-      flags: 'X-B3-Flags'
-    }.freeze
-=end
-
-    B3_HEADERS = {
       sampled: 'X-B3-Sampled',
       flags: 'X-B3-Flags'
     }.freeze
@@ -31,9 +25,17 @@ module ZipkinTracer
       Rails.logger.info("Zipkin Faraday middleware start")
       trace_id = Trace.id.next_id
       Trace.with_trace_id(trace_id) do
-        B3_HEADERS.each do |method, header|
-          env.request_headers[header] = trace_id.send(method).to_s
+        hash = B3_HEADERS.each_pair do |k, v|
+          hash[v] = trace_id.send(k).to_s
         end
+        Rails.logger.info("Zipkin Faraday extra headers #{hash}")
+
+        #B3_HEADERS.each do |method, header|
+        #  env.request_headers[header] = trace_id.send(method).to_s
+        #end
+
+        env.request_headers.merge!(hash)
+
         if trace_id.sampled?
           Rails.logger.info("Zipkin Faraday: sampled ")
           trace!(env, trace_id)
