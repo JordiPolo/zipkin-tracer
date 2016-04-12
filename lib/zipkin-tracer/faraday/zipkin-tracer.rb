@@ -24,7 +24,6 @@ module ZipkinTracer
       Rails.logger.info("Zipkin Faraday middleware start")
       trace_id = Trace.id.next_id
       Trace.with_trace_id(trace_id) do
-        Rails.logger.info(env)
         B3_HEADERS.each do |method, header|
           env[:request_headers][header] = trace_id.send(method).to_s
         end
