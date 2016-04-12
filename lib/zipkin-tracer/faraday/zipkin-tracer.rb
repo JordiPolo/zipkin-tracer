@@ -44,9 +44,9 @@ module ZipkinTracer
         else
           Rails.logger.info("Zipkin Faraday: not sampled ")
           response = @app.call(env).on_complete do |envi|
-            Rails.logger.info("PRINTING")
-            Rails.logger.info(envi)
-            Rails.logger.info(envi[:request_headers])
+        #    Rails.logger.info("PRINTING")
+        #    Rails.logger.info(envi)
+        #    Rails.logger.info(envi[:request_headers])
           end
         end
       end
