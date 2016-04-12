@@ -45,6 +45,11 @@ module ZipkinTracer
           @app.call(env)
         end
       end
+      Rails.logger.info("Zipkin Faraday done #{env.request_headers}")
+    rescue Exception => e
+      Rails.logger.info("Zipkin Faraday failed")
+      Rails.logger.exception(e)
+      Rails.logger.info(e.backtrace)
     end
 
     private
