@@ -42,14 +42,19 @@ module ZipkinTracer
           trace!(env, trace_id)
         else
           Rails.logger.info("Zipkin Faraday: not sampled ")
-          @app.call(env)
+          response = @app.call(env).on_complete do |envi|
+            Rails.logger.info("PRINTING")
+            Rails.logger.info(envi)
+            Rails.logger.info(envi[:request_headers])
+          end
         end
       end
-      Rails.logger.info("Zipkin Faraday done #{env.request_headers}")
+      response
     rescue Exception => e
       Rails.logger.info("Zipkin Faraday failed")
       Rails.logger.exception(e)
       Rails.logger.info(e.backtrace)
+      response
     end
 
     private
