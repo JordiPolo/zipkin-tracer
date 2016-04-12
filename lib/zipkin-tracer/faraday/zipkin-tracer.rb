@@ -25,7 +25,7 @@ module ZipkinTracer
       trace_id = Trace.id.next_id
       Trace.with_trace_id(trace_id) do
         B3_HEADERS.each do |method, header|
-        #  env[:request_headers][header] = trace_id.send(method).to_s
+          env.request_headers[header] = trace_id.send(method).to_s
         end
         if trace_id.sampled?
           Rails.logger.info("Zipkin Faraday: sampled ")
