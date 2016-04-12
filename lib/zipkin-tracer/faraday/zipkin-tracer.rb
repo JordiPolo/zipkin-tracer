@@ -22,6 +22,7 @@ module ZipkinTracer
     end
 
     def call(env)
+      response = nil
       Rails.logger.info("Zipkin Faraday middleware start")
       trace_id = Trace.id.next_id
       Trace.with_trace_id(trace_id) do
@@ -35,7 +36,7 @@ module ZipkinTracer
         #  env.request_headers[header] = trace_id.send(method).to_s
         #end
 
-        #env.request_headers.merge!(hash)
+        env.request_headers.merge!(hash)
 
         if trace_id.sampled?
           Rails.logger.info("Zipkin Faraday: sampled ")
