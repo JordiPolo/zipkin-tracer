@@ -25,7 +25,8 @@ module ZipkinTracer
         B3_HEADERS.each do |method, header|
           env[:request_headers][header] = trace_id.send(method).to_s
         end
-        env[:request_headers]['X-B3-Zipkin'] = "sometraceidinhere"
+        Rails.logger.info("flags would be #{trace_id.flags.to_s}")
+        env[:request_headers]['X-B3-Zipkin'] = "0"
 
         if trace_id.sampled?
           trace!(env, trace_id)
