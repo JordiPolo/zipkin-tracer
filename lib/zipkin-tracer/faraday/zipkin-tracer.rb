@@ -26,7 +26,7 @@ module ZipkinTracer
           env[:request_headers][header] = trace_id.send(method).to_s
         end
         Rails.logger.info("flags would be #{trace_id.flags.to_s}")
-        env[:request_headers]['X-B3-Flags'] = "tesingother"
+        env[:request_headers]['X-B3-Flags'] = "1234567891234"
 
         if trace_id.sampled?
           trace!(env, trace_id)
