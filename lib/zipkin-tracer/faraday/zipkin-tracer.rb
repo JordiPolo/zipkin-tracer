@@ -11,7 +11,7 @@ module ZipkinTracer
       parent_id: 'X-B3-ParentSpanId',
       span_id: 'X-B3-SpanId',
       sampled: 'X-B3-Sampled',
-      flags: 'X-B3-Flags'
+      #flags: 'X-B3-Flags'
     }.freeze
 
     def initialize(app, service_name = nil)
@@ -25,6 +25,8 @@ module ZipkinTracer
         B3_HEADERS.each do |method, header|
           env[:request_headers][header] = trace_id.send(method).to_s
         end
+        env[:request_headers]['X-B3-Zipkin'] = "sometraceidinhere"
+
         if trace_id.sampled?
           trace!(env, trace_id)
         else
